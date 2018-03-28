@@ -73,7 +73,7 @@ ClassImp( AliAnalysisTaskSimSpectraLF )
 //_____________________________________________________________________________
 
 AliAnalysisTaskSimSpectraLF::AliAnalysisTaskSimSpectraLF():
-  AliAnalysisTaskSE(),
+AliAnalysisTaskSE(),
   fMcEvent(0x0),
   fMcHandler(0x0),
   fStack(0),
@@ -128,7 +128,7 @@ void AliAnalysisTaskSimSpectraLF::UserCreateOutputObjects(){
   fListOfObjects = new TList();
   fListOfObjects->SetOwner(kTRUE);
 
-  TString pidNames[10] = { "Pion", "Kaon", "Proton", "K0Short", "Lambda", "Xi", "Omega", "Phi", "KStar","KStarPM" };
+  TString pidNames[11] = { "Pion", "Kaon", "Proton", "K0Short", "Lambda", "Xi", "Omega", "Sigma0","KStarPM", "Phi", "KStar" };
 
   // ### Create histograms
   fHistEvt = new TH1I("fHistEvt","fHistEvt",5,0,5) ;
@@ -157,13 +157,13 @@ void AliAnalysisTaskSimSpectraLF::UserCreateOutputObjects(){
   InitHisto<TH1F>("fHistEta","Eta Distr.", 200, -1., 1., "#eta", "N_{part}");
   InitHisto<TH1F>("fHistY", "Y Distr.", 200, -1., 1., "#it{y}", "N_{part}");
   
-  for(Int_t i=0; i<10; i++)
+  for(Int_t i=0; i<11; i++)
     InitHisto<TH1F>(Form("fHistPt_%s",pidNames[i].Data()), "Generated #it{p}_{T} distribution",400,0.,20., "#it{p}_{T} (GeV/#it{c})", "Entries");
 
 
-  Int_t    fBins[2] = {  10  , 400  };
+  Int_t    fBins[2] = {  11  , 400  };
   Double_t  fMin[2] = {  0. ,   0. };
-  Double_t  fMax[2] = {  10. ,  20. };
+  Double_t  fMax[2] = {  11. ,  20. };
   
   THnSparseD *fHistQAPart   = new THnSparseD("fHistNParticle",  "LF particles",  2, fBins, fMin, fMax); 
   fHistQAPart->Sumw2();
@@ -174,9 +174,12 @@ void AliAnalysisTaskSimSpectraLF::UserCreateOutputObjects(){
   fHistQAPart->GetAxis(0)->SetBinLabel( 5, "Lambda"	);
   fHistQAPart->GetAxis(0)->SetBinLabel( 6, "Xi"		);
   fHistQAPart->GetAxis(0)->SetBinLabel( 7, "Omega"	);
-  fHistQAPart->GetAxis(0)->SetBinLabel( 8 ,"Phi"	);
-  fHistQAPart->GetAxis(0)->SetBinLabel( 9, "Kstar"	);
-  fHistQAPart->GetAxis(0)->SetBinLabel( 10, "KstarPM"	);
+  fHistQAPart->GetAxis(0)->SetBinLabel( 8, "Sigma0"	);
+  fHistQAPart->GetAxis(0)->SetBinLabel( 9, "KstarPM"	);
+  fHistQAPart->GetAxis(0)->SetBinLabel( 10 ,"Phi"	);
+  fHistQAPart->GetAxis(0)->SetBinLabel( 11, "Kstar"	);
+  
+  
   fHistQAPart->GetAxis(1)->SetTitle("pt");
   fListOfObjects->Add(fHistQAPart);  
   
@@ -271,7 +274,7 @@ Bool_t AliAnalysisTaskSimSpectraLF::IsMCEventSelected(TObject* obj){
 
   const AliVVertex *vtxMC = event->GetPrimaryVertex();
     
-  if( TMath::Abs(vtxMC->GetZ()) > 10. ) 
+  if( TMath::Abs(vtxMC->GetZ()) > 11. ) 
     return kFALSE;
   
   if( isSelected ) 
@@ -295,11 +298,11 @@ Bool_t AliAnalysisTaskSimSpectraLF::IsMCParticleGenerated(TObject* obj, AliStack
 
   // ### not needed for resonances, but it is kept for later reference
   /*  
-  if ( !fstack->IsPhysicalPrimary(vpart->GetLabel()) )
-  {
-    if( vpart->PdgCode() != 11 )
+      if ( !fstack->IsPhysicalPrimary(vpart->GetLabel()) )
+      {
+      if( vpart->PdgCode() != 11 )
       isSelected = kFALSE;
-  }
+      }
   */
   return isSelected;
 }
@@ -352,27 +355,27 @@ void AliAnalysisTaskSimSpectraLF::EventSel(TObject* obj){
     if ( TMath::Abs(mcPart->Eta()) > fEta ) continue;
 
     if ( event->IsPhysicalPrimary(i) )
-    {
-      FillHisto("fHistPart",0.5);
+      {
+	FillHisto("fHistPart",0.5);
 
-      if ( mcPart->Charge() > 0 ) 
-	FillHisto("fHistPart",1.5);
-      else if ( mcPart->Charge() < 0 )
-	FillHisto("fHistPart",2.5);
-      else if ( mcPart->Charge() == 0 )
-	FillHisto("fHistPart",3.5);
+	if ( mcPart->Charge() > 0 ) 
+	  FillHisto("fHistPart",1.5);
+	else if ( mcPart->Charge() < 0 )
+	  FillHisto("fHistPart",2.5);
+	else if ( mcPart->Charge() == 0 )
+	  FillHisto("fHistPart",3.5);
 
-      multPrimaryYes++;
+	multPrimaryYes++;
 
-      if(pdgcode==11||pdgcode==13||pdgcode==211||pdgcode==321||pdgcode==2212)
-	multPrimaryCharged++;
-    }
+	if(pdgcode==11||pdgcode==13||pdgcode==211||pdgcode==321||pdgcode==2212)
+	  multPrimaryCharged++;
+      }
     else 
       multPrimaryNo++;
   }
 
   if ( multPrimaryYes != 0 )
-     FillHisto("fHistMultPhysPrimary",multPrimaryYes);
+    FillHisto("fHistMultPhysPrimary",multPrimaryYes);
   if ( multPrimaryCharged != 0 )
     FillHisto("fHistMultPhysPrimaryCharged",multPrimaryCharged);
   if ( multPrimaryNo != 0 )
@@ -384,14 +387,14 @@ void AliAnalysisTaskSimSpectraLF::EventSel(TObject* obj){
 
 void AliAnalysisTaskSimSpectraLF::ParticleSel(TObject* obj){
 
-  TString pidNames[10] = { "Pion", "Kaon", "Proton", "K0Short", "Lambda", "Xi", "Omega", "Phi", "KStar","KStarPM" };
+  TString pidNames[11] = { "Pion", "Kaon", "Proton", "K0Short", "Lambda", "Xi", "Omega", "Sigma0","KStarPM", "Phi", "KStar"};
 
   if ( !obj ) return;
 
   AliMCEvent *event = dynamic_cast<AliMCEvent*>(obj);
   if ( !event ) return;
     
-  Bool_t isPrimary[10] = { kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kFALSE, kFALSE, kFALSE };
+  Bool_t isPrimary[11] = { kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kTRUE, kFALSE, kFALSE };
 
   Short_t pidCodeMC = 0;
   Double_t myY = 0.;
@@ -423,24 +426,25 @@ void AliAnalysisTaskSimSpectraLF::ParticleSel(TObject* obj){
     
     isPhysPrim = event->IsPhysicalPrimary(ipart);
 
-    if ( pPDG==211 || pPDG==321 || pPDG==2212 || pPDG==310 || pPDG==3122 || pPDG==3312 || pPDG==3334 || pPDG==333 || pPDG==313 || pPDG==323 )
-    {
-      if( isPhysPrim )
+    if ( pPDG==211 || pPDG==321 || pPDG==2212 || pPDG==310 || pPDG==3122 || pPDG==3312 || pPDG==3334 || pPDG==3212 || pPDG==323 || pPDG==333 || pPDG==313 )
       {
-	if (pPDG==211)	MCPartSel[0]	= 0.5;	// 	pi
-	if (pPDG==321)	MCPartSel[0]	= 1.5;	//	K
-	if (pPDG==2212)	MCPartSel[0]	= 2.5;	//	p
-	if (pPDG==310)	MCPartSel[0]	= 3.5;	// 	K0Short
-	if (pPDG==3122)	MCPartSel[0]	= 4.5;	//	Lambda
-	if (pPDG==3312) MCPartSel[0]	= 5.5;	//	Xi -
-	if (pPDG==3334) MCPartSel[0]	= 6.5;	//	Omega -
+	if( isPhysPrim )
+	  {
+	    if (pPDG==211)	MCPartSel[0]	= 0.5;	// 	pi
+	    if (pPDG==321)	MCPartSel[0]	= 1.5;	//	K
+	    if (pPDG==2212)	MCPartSel[0]	= 2.5;	//	p
+	    if (pPDG==310)	MCPartSel[0]	= 3.5;	// 	K0Short
+	    if (pPDG==3122)	MCPartSel[0]	= 4.5;	//	Lambda
+	    if (pPDG==3312) MCPartSel[0]	= 5.5;	//	Xi -
+	    if (pPDG==3334) MCPartSel[0]	= 6.5;	//	Omega -
+	    if (pPDG==3212) MCPartSel[0]	= 7.5;	//	Sigma 0
+	    if (pPDG==323)	MCPartSel[0]	= 8.5;	//	K*(892) +-
+	  }
+	else{
+	  if (pPDG==333)	MCPartSel[0]	= 9.5;	//	Phi(1020)
+	  if (pPDG==313)	MCPartSel[0]	= 10.5;	//	K*(892)
+	}
       }
-      else{
-	if (pPDG==333)	MCPartSel[0]	= 7.5;	//	Phi(1020)
-	if (pPDG==313)	MCPartSel[0]	= 8.5;	//	K*(892)
-	if (pPDG==323)	MCPartSel[0]	= 9.5;	//	K*(892) +-
-      }
-    }
 
     ((THnSparseD*)fListOfObjects->FindObject(Form("fHistNParticle")))->Fill(MCPartSel);
     FillHisto("fHistEta",mcPart->Eta());
@@ -449,7 +453,7 @@ void AliAnalysisTaskSimSpectraLF::ParticleSel(TObject* obj){
     pidCodeMC = GetPidCode(pPDG);
     
     Bool_t isSelectedPart = kTRUE;
-    for(Int_t i=0; i<10; i++) 
+    for(Int_t i=0; i<11; i++) 
       if( pidCodeMC == i ) 
 	isSelectedPart = kFALSE;
     if ( isSelectedPart ) continue;
@@ -457,20 +461,20 @@ void AliAnalysisTaskSimSpectraLF::ParticleSel(TObject* obj){
     myY = myRap(mcPart->E(),mcPart->Pz());
     ipt = mcPart->Pt();
     
-    for(Int_t i=0; i<10; i++)
-    {
-      if( pidCodeMC == i && TMath::Abs(myY) < fY)
+    for(Int_t i=0; i<11; i++)
       {
-	if( isPrimary[i] == kTRUE && isPhysPrim == kFALSE ) 
-	  continue;
+	if( pidCodeMC == i && TMath::Abs(myY) < fY)
+	  {
+	    if( isPrimary[i] == kTRUE && isPhysPrim == kFALSE ) 
+	      continue;
 
-	FillHisto(Form("fHistPt_%s",pidNames[i].Data()),ipt);
+	    FillHisto(Form("fHistPt_%s",pidNames[i].Data()),ipt);
 	
-	if(!i)
-	  FillHisto("fHistY",myY);
+	    if(!i)
+	      FillHisto("fHistY",myY);
 	
+	  }
       }
-    }
     
   } // particle loop
 }
@@ -503,38 +507,41 @@ Short_t AliAnalysisTaskSimSpectraLF::GetPidCode(Int_t pdgCode) const  {
   Short_t pidCode = 999;
 
   switch (TMath::Abs(pdgCode)) {
-    case 211:
-      pidCode = 0; // pion
+  case 211:
+    pidCode = 0; // pion
     break;
-    case 321:
-      pidCode = 1; // kaon
+  case 321:
+    pidCode = 1; // kaon
     break;
-    case 2212:
-      pidCode = 2; // proton
+  case 2212:
+    pidCode = 2; // proton
     break;
-    case 310:
-      pidCode = 3; // K0s
+  case 310:
+    pidCode = 3; // K0s
     break;
-    case 3122:
-      pidCode = 4; // Lambda
+  case 3122:
+    pidCode = 4; // Lambda
     break;
-    case 3312:
-      pidCode = 5; // Xi-
+  case 3312:
+    pidCode = 5; // Xi-
     break;
-    case 3334:
-      pidCode = 6; // Omega-
+  case 3334:
+    pidCode = 6; // Omega-
     break;
-    case 333:
-      pidCode = 7; // phi(1020)
+  case 333:
+    pidCode = 7; // phi(1020)
     break;
-    case 313:
-      pidCode = 8; // K*(892)0
+  case 313:
+    pidCode = 8; // K*(892)0
     break;
-    case 323:
-      pidCode = 9; // K*(892)+-
+  case 3212:
+    pidCode = 9; // Sigma 0
     break;
-    default:
-      pidCode = 999;  // something else
+  case 323:
+    pidCode = 10; // K*(892)+-
+    break;
+  default:
+    pidCode = 999;  // something else
   };
   
   return pidCode;
